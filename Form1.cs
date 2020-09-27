@@ -25,6 +25,9 @@ namespace TakipsiClient
         [DllImport("cid.dll", EntryPoint = "CidStart")]
         public static extern string CidStart();
 
+        [DllImport("cid.dll", EntryPoint = "CidStop")]
+        public static extern string CidStop();
+
         public Form1()
         {
             InitializeComponent();
@@ -33,12 +36,34 @@ namespace TakipsiClient
                 .WithUrl("https://localhost:44346/Caller-Hub")
                 .Build();
 
+            connection.Closed += ConnectionListener;
+
+            connection.Reconnected += async (selam) =>
+            {
+                MessageBox.Show(selam);
+            };
+
             connection.StartAsync();
+
+            ConnectionListener();
+        }
+
+        private async Task ConnectionListener(Exception exp = null)
+        {
+            while (connection.State != HubConnectionState.Connected)
+            {
+                if (connection.State == HubConnectionState.Disconnected)
+                {
+                    connection.StartAsync();
+                }
+                await Task.Delay(3000);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             WindowState = FormWindowState.Minimized;
+
             CidStart();
             timer1.Start();
         }
@@ -87,16 +112,6 @@ namespace TakipsiClient
 
                 try
                 {
-                    while(connection.State != HubConnectionState.Connected)
-                    {
-                        if (connection.State == HubConnectionState.Connecting)
-                        {
-                            continue;
-                        }
-
-                        Thread.Sleep(3000);
-                        connection.StartAsync();
-                    }
                     connection.InvokeAsync("SendCallerInfo", callerInfo);
                 }
                 catch (Exception ex)
