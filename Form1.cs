@@ -102,13 +102,23 @@ namespace TakipsiClient
                 string[] callDate = callDateTime[0].Split('-');
                 string[] callTime = callDateTime[1].Split(':');
 
-                callerInfo.CallDateTime = new DateTime(
-                    year: DateTime.Now.Year,
-                    month: int.Parse(callDate[1]),
-                    day: int.Parse(callDate[0]),
-                    hour: int.Parse(callTime[0]),
-                    minute: int.Parse(callTime[1]),
-                    second: 0);
+                if (int.TryParse(callDate[1], out int month) &&
+                    int.TryParse(callDate[0], out int day) &&
+                    int.TryParse(callTime[0], out int hour) &&
+                    int.TryParse(callTime[1], out int minute))
+                {
+                    callerInfo.CallDateTime = new DateTime(
+                        year: DateTime.Now.Year,
+                        month: month > 0 ? month : 1,
+                        day: day > 0 ? day : 1,
+                        hour: hour > 0 ? hour : 1,
+                        minute: minute > 0 ? minute : 1,
+                        second: 0);
+                }
+                else
+                {
+                    callerInfo.CallDateTime = DateTime.Now;
+                }
 
                 try
                 {
